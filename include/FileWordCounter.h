@@ -17,6 +17,7 @@ public:
     explicit FileWordCounter(size_t numberOfParallelTasks);
 
     Result countWordsInFile(const std::string& fileName);
+    Result countWordsInDir(const std::string& dirName, const std::string& extension);
 
 private:
     void mergeResult(FileWordCounter::Result& result, FileWordCounter::Result&& tempResult);

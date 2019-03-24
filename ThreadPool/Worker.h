@@ -29,12 +29,13 @@ private:
     void threadExec();
 
 private:
-    std::thread mThread;
-    std::atomic_bool mEnabled;
     mutable std::mutex mMutex;
+    std::atomic_bool mEnabled;
     std::condition_variable mCv;
     std::queue<std::function<void()>> mTasks;
     std::atomic_bool mIsRunning;
+    std::thread mThread;
+
 };
 
 typedef std::shared_ptr<Worker> WorkerPtr;

@@ -30,8 +30,23 @@ ConfigParameters::ConfigParameters(const std::string& iInputFile,
         , numThreads(iNumThreads)
         , outFileAlphabetOrder(iOutFileAlphabetOrder)
         , outFileCountOrder(iOutFileCountOrder)
+        , useDir(false)
 {
 
+}
+
+ConfigParameters::ConfigParameters(const std::string& iDirectory,
+                                   size_t iNumThreads,
+                                   const std::string& iOutFileAlphabetOrder,
+                                   const std::string& iOutFileCountOrder,
+                                   const std::string& extension)
+        : inputDirectory(iDirectory)
+        , numThreads(iNumThreads)
+        , outFileAlphabetOrder(iOutFileAlphabetOrder)
+        , outFileCountOrder(iOutFileCountOrder)
+        , extension(extension)
+        , useDir(true)
+{
 }
 
 ConfigParameters ConfigParameters::parseConfig(const std::string configFile)
@@ -41,7 +56,8 @@ ConfigParameters ConfigParameters::parseConfig(const std::string configFile)
     if (!file)
         throw std::invalid_argument("No config file");
 
-    std::string inputFile, outFileAlphabetOrder, outFileCountOrder;
+    std::string inputFile, inputDir, outFileAlphabetOrder, outFileCountOrder, extension;
+    bool use_dir = false;
     size_t numThreads = 1;
 
     std::string line;
@@ -49,14 +65,24 @@ ConfigParameters ConfigParameters::parseConfig(const std::string configFile)
     {
         size_t pos = line.find('=');
 
+        if (line.find("use_dir") != std::string::npos)
+            use_dir = static_cast<bool>(std::stoi(line.substr(pos + 1)));
+
         if (line.find("input_file") != std::string::npos)
             inputFile = trimSpace(line.substr(pos + 1));
+
+        if (line.find("input_dir") != std::string::npos)
+            inputDir = trimSpace(line.substr(pos + 1));
+
 
         if (line.find("output_file_alphabet_order") != std::string::npos)
             outFileAlphabetOrder = trimSpace(line.substr(pos + 1));
 
         if (line.find("output_file_count_order") != std::string::npos)
             outFileCountOrder = trimSpace(line.substr(pos + 1));
+
+        if (line.find("extension") != std::string::npos)
+            extension = trimSpace(line.substr(pos + 1));
 
         if (line.find("num_threads") != std::string::npos)
             numThreads = std::stoi(line.substr(pos + 1));
@@ -65,6 +91,9 @@ ConfigParameters ConfigParameters::parseConfig(const std::string configFile)
     if (inputFile.empty() || outFileCountOrder.empty() || outFileAlphabetOrder.empty())
         std::invalid_argument("Cannot parse input parameters from config file");
 
+
+    if (use_dir)
+        return ConfigParameters(inputDir, numThreads, outFileAlphabetOrder, outFileCountOrder, extension);
 
     return ConfigParameters(inputFile, numThreads, outFileAlphabetOrder, outFileCountOrder);
 

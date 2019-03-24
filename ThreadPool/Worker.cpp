@@ -10,8 +10,8 @@
 
 Worker::Worker()
 : mEnabled(true)
-, mThread(&Worker::threadExec, this)
 , mIsRunning(false)
+, mThread(&Worker::threadExec, this)
 {
 }
 

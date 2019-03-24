@@ -7,8 +7,6 @@
 #include "ResultSaver.h"
 
 
-
-
 int main(int argc, char** argv) {
 
     if (argc != 2) {
@@ -27,7 +25,9 @@ int main(int argc, char** argv) {
     auto start = std::chrono::system_clock::now();
 
     FileWordCounter fileWordCounter(std::thread::hardware_concurrency());
-    auto wordCountMap = fileWordCounter.countWordsInFile(configParameters.inputFile);
+    auto wordCountMap = configParameters.useDir
+            ? fileWordCounter.countWordsInDir(configParameters.inputDirectory, configParameters.extension)
+            :  fileWordCounter.countWordsInFile(configParameters.inputFile);
 
     auto end = std::chrono::system_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

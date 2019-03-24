@@ -10,6 +10,8 @@
 #include <cctype>
 #include <fstream>
 #include <cmath>
+#include <experimental/filesystem>
+#include <algorithm>
 
 
 namespace
@@ -30,6 +32,21 @@ namespace
 
         return false;
     }
+
+    namespace fs = std::experimental::filesystem;
+
+    std::vector<fs::path> acquireAllFiles(const std::string& directory, const std::string& mask)
+    {
+        fs::recursive_directory_iterator begin(directory);
+        fs::recursive_directory_iterator end;
+        std::vector<fs::path> files;
+        std::copy_if(begin, end, std::back_inserter(files), [&](const fs::path& path)
+        {
+            return fs::is_regular_file(path) && (path.extension() == mask);
+        });
+
+        return files;
+    }
 }
 
 
@@ -38,6 +55,29 @@ FileWordCounter::FileWordCounter(size_t numberOfParallelTasks)
 , mThreadPool(numberOfParallelTasks)
 {
 }
+
+FileWordCounter::Result FileWordCounter::countWordsInDir(const std::string &dirName, const std::string& extension)
+{
+    auto files = acquireAllFiles(dirName, extension);
+
+    if (files.empty())
+    {
+        return Result();
+    }
+
+    Result result = countWordsInFile(files[0].string());
+
+    const size_t size = files.size();
+
+    for (size_t i = 1; i < size; ++i)
+    {
+        Result tempResult = countWordsInFile(files[i].string());
+        mergeResult(result, std::move(tempResult));
+    }
+
+    return result;
+}
+
 
 FileWordCounter::Result FileWordCounter::countWordsInFile(const std::string &fileName)
 {
@@ -115,6 +155,7 @@ FileWordCounter::Result FileWordCounter::buildWordCountResult(std::vector<std::f
 
 
 
+
 std::string FileWordCounter::findFirstWordInFileFromPos(std::ifstream &file, size_t start_pos, unsigned long length)
 {
     unsigned long leftLength = length - start_pos;
@@ -142,6 +183,7 @@ std::string FileWordCounter::findFirstWordInFileFromPos(std::ifstream &file, siz
 
         str += tempStr;
         leftLength -= chunkSize;
+        pos += chunkSize;
     }
 
     return str;
